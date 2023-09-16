@@ -1,0 +1,6 @@
+name: "Example"
+description: "An example plugin!"
+main: "com.atombuilt.atomkt.spigot.example.ExamplePlugin"
+version: "1.0.0"
+api-version: "1.20"
+author: "AtomBuilt"

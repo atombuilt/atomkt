@@ -1,0 +1,4 @@
+plugins {
+    atom
+    published
+}
