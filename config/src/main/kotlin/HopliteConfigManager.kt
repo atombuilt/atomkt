@@ -1,5 +1,6 @@
 package com.atombuilt.atomkt.config
 
+import com.atombuilt.atomkt.commons.string.appendPrefixIfAbsent
 import com.sksamuel.hoplite.ClasspathResourceLoader.Companion.toClasspathResourceLoader
 import com.sksamuel.hoplite.ConfigLoader
 import com.sksamuel.hoplite.ConfigSource
@@ -55,7 +56,7 @@ internal class HopliteConfigManager(
     }
 
     override fun <T : Any> declareConfigByClasspath(configKClass: KClass<T>, classpath: String) {
-        val classpathWithPrefix = if (classpath.startsWith("/")) classpath else "/$classpath"
+        val classpathWithPrefix = classpath.appendPrefixIfAbsent("/")
         val configLoader = configLoaderBuilder().addResourceSource(classpathWithPrefix).build()
         val configSources = listOf(ConfigSource.ClasspathSource(classpath, classLoader.toClasspathResourceLoader()))
         val configKey = configKClass.qualifiedName!!
@@ -64,7 +65,7 @@ internal class HopliteConfigManager(
     }
 
     override fun <T : Any> declareConfigByPathOrClasspath(configKClass: KClass<T>, path: Path, classpath: String) {
-        val classpathWithPrefix = if (classpath.startsWith("/")) classpath else "/$classpath"
+        val classpathWithPrefix = classpath.appendPrefixIfAbsent("/")
         val configLoader = configLoaderBuilder()
             .addPathSource(path, optional = true, allowEmpty = true)
             .addResourceSource(classpathWithPrefix)
