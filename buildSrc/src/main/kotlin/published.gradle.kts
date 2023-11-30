@@ -38,8 +38,8 @@ publishing {
                 }
                 licenses {
                     license {
-                        name.set("GPL v3.0")
-                        url.set("https://opensource.org/license/gpl-3-0/")
+                        name.set("MIT")
+                        url.set("https://opensource.org/license/mit/")
                     }
                 }
                 scm {
