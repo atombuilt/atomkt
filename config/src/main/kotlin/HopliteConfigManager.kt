@@ -1,11 +1,8 @@
 package com.atombuilt.atomkt.config
 
 import com.atombuilt.atomkt.commons.string.appendPrefixIfAbsent
+import com.sksamuel.hoplite.*
 import com.sksamuel.hoplite.ClasspathResourceLoader.Companion.toClasspathResourceLoader
-import com.sksamuel.hoplite.ConfigLoader
-import com.sksamuel.hoplite.ConfigSource
-import com.sksamuel.hoplite.addPathSource
-import com.sksamuel.hoplite.addResourceSource
 import com.sksamuel.hoplite.fp.getOrElse
 import org.koin.core.Koin
 import org.koin.core.module.Module
@@ -21,9 +18,12 @@ import kotlin.io.path.exists
 import kotlin.io.path.writeBytes
 import kotlin.reflect.KClass
 
+private typealias HopliteBuilderConfigure = ConfigLoaderBuilder.() -> Unit
+
 internal class HopliteConfigManager(
     private val koin: Koin,
-    private val classLoader: ClassLoader
+    private val classLoader: ClassLoader,
+    private val hopliteBuilderConfigure: HopliteBuilderConfigure? = null,
 ) : ConfigManager {
 
     private val config: ConcurrentMap<String, Any> = ConcurrentHashMap()
@@ -87,7 +87,12 @@ internal class HopliteConfigManager(
         return loadConfig(declaration)
     }
 
-    private fun configLoaderBuilder() = ConfigLoader.builder().withClassLoader(classLoader).addDefaults()
+    private fun configLoaderBuilder(): ConfigLoaderBuilder {
+        return ConfigLoader.builder()
+            .withClassLoader(classLoader)
+            .addDefaults()
+            .apply { hopliteBuilderConfigure?.invoke(this) }
+    }
 
     private fun loadConfig() {
         declarations.forEach { (key, declaration) ->

@@ -1,5 +1,6 @@
 package com.atombuilt.atomkt.config
 
+import com.sksamuel.hoplite.ConfigLoaderBuilder
 import org.koin.core.Koin
 import java.nio.file.Path
 import kotlin.reflect.KClass
@@ -46,6 +47,17 @@ public interface ConfigManager {
          */
         public fun default(koin: Koin, classLoader: ClassLoader): ConfigManager {
             return HopliteConfigManager(koin, classLoader)
+        }
+
+        /**
+         * Creates an instance of the Hoplite implementation for [ConfigManager].
+         */
+        public fun hoplite(
+            koin: Koin,
+            classLoader: ClassLoader,
+            configure: ConfigLoaderBuilder.() -> Unit
+        ): ConfigManager {
+            return HopliteConfigManager(koin, classLoader, configure)
         }
     }
 }

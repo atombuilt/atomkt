@@ -8,9 +8,10 @@ import java.nio.file.Path
  */
 public inline fun KoinApplication.loadConfigManager(
     classLoader: ClassLoader = ClassLoader.getSystemClassLoader(),
+    configManager: ConfigManager = ConfigManager.default(koin, classLoader),
     block: ConfigManager.() -> Unit
 ) {
-    ConfigManager.default(koin, classLoader).apply(block).load()
+    configManager.apply(block).load()
 }
 
 /**
