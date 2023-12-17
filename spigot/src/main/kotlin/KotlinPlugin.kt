@@ -102,8 +102,13 @@ public abstract class KotlinPlugin : JavaPlugin(), KoinComponent {
         serverHeartbeatController.runControlled {
             startKoin()
             onEnabled()
+            registerListeners()
             registerCommands()
         }
+    }
+
+    private fun registerListeners() {
+        linkedListeners.forEach { registerListener(it) }
     }
 
     private fun registerCommands() {
@@ -157,6 +162,7 @@ public abstract class KotlinPlugin : JavaPlugin(), KoinComponent {
     final override fun onDisable() {
         try {
             serverHeartbeatController.runControlled {
+                unregisterListeners()
                 unregisterCommands()
                 onDisabled()
                 stopKoin()
@@ -166,6 +172,10 @@ public abstract class KotlinPlugin : JavaPlugin(), KoinComponent {
             coroutineScope.cancel(cancellationException)
             asyncCoroutineScope.cancel(cancellationException)
         }
+    }
+
+    private fun unregisterListeners() {
+        HandlerList.unregisterAll(this)
     }
 
     private fun unregisterCommands() {
