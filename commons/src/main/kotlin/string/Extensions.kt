@@ -1,5 +1,7 @@
 package com.atombuilt.atomkt.commons.string
 
+import kotlin.math.abs
+
 public fun String.appendPrefixIfAbsent(prefix: String, ignoreCase: Boolean = false): String {
     return if (this.startsWith(prefix, ignoreCase)) this else prefix + this
 }
@@ -33,4 +35,34 @@ public fun String.endsWith(vararg suffixes: String, ignoreCase: Boolean = false)
  */
 public fun String.contains(vararg substrings: String, ignoreCase: Boolean = false): Boolean {
     return substrings.any { this.contains(it, ignoreCase) }
+}
+
+/**
+ * Returns roman numeral representation of this integer.
+ */
+public fun Int.toRomanNumeral(): String {
+    var input = abs(this)
+    val builder = StringBuilder()
+
+    fun extractUnit(perUnit: Int, representation: String) {
+        if (input < perUnit) return
+        repeat(input / perUnit) { builder.append(representation) }
+        input %= perUnit
+    }
+
+    extractUnit(1000, "M")
+    extractUnit(900, "CM")
+    extractUnit(500, "D")
+    extractUnit(400, "CD")
+    extractUnit(100, "C")
+    extractUnit(90, "XC")
+    extractUnit(50, "L")
+    extractUnit(40, "XL")
+    extractUnit(10, "X")
+    extractUnit(9, "IX")
+    extractUnit(5, "V")
+    extractUnit(4, "IV")
+    extractUnit(1, "I")
+
+    return builder.toString()
 }
