@@ -3,7 +3,7 @@ plugins {
 }
 
 group = "com.atombuilt.atomkt"
-version = "1.0.2"
+version = "2.0.0"
 
 subprojects {
     group = "${rootProject.group}.atomkt"
