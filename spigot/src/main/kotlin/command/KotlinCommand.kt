@@ -3,6 +3,7 @@ package com.atombuilt.atomkt.spigot.command
 import com.atombuilt.atomkt.commons.reflection.access
 import com.atombuilt.atomkt.commons.reflection.assure
 import com.atombuilt.atomkt.spigot.KotlinPlugin
+import com.atombuilt.atomkt.spigot.component.KotlinPluginComponent
 import kotlinx.coroutines.launch
 import org.bukkit.Location
 import org.bukkit.command.Command
@@ -15,19 +16,21 @@ import org.bukkit.command.SimpleCommandMap
  * such as coroutines.
  */
 public abstract class KotlinCommand(
-    protected val plugin: KotlinPlugin,
     name: String,
     description: String = "",
     usageMessage: String = "/<command>",
     aliases: List<String> = emptyList(),
     permission: String? = null,
-) : Command(name, description, usageMessage, aliases) {
+) : Command(name, description, usageMessage, aliases), KotlinPluginComponent {
+
+    private lateinit var plugin: KotlinPlugin
 
     init {
         super.setPermission(permission)
     }
 
     final override fun execute(sender: CommandSender, commandLabel: String, args: Array<String>): Boolean {
+        requireRegistration()
         var isSuccess = false
         plugin.coroutineScope.launch {
             isSuccess = execute(sender, args.asList())
@@ -58,12 +61,17 @@ public abstract class KotlinCommand(
         alias: String,
         args: Array<String>,
     ): MutableList<String> {
+        requireRegistration()
         var result: List<String> = DefaultTabComplete
         plugin.coroutineScope.launch {
             result = tabComplete(sender, args.asList())
         }
         if (result === DefaultTabComplete) return super.tabComplete(sender, alias, args)
         return result.toMutableList()
+    }
+
+    private fun requireRegistration() {
+        if (!::plugin.isInitialized) throw IllegalStateException("Register the command before using it.")
     }
 
     /**
@@ -77,27 +85,14 @@ public abstract class KotlinCommand(
         return DefaultTabComplete
     }
 
-    /**
-     * Links this command to the [plugin].
-     * @see [KotlinPlugin.linkCommand]
-     */
-    public fun link(): Boolean {
-        return plugin.linkCommand(this)
-    }
-
-    /**
-     * Unlinks this command from the [plugin].
-     * @see [KotlinPlugin.unlinkCommand]
-     */
-    public fun unlink(): Boolean {
-        return plugin.unlinkCommand(this)
-    }
+    override suspend fun registerComponent(plugin: KotlinPlugin): Boolean = register(plugin)
 
     /**
      * Registers the command.
      * @return If the registration was successful.
      */
-    public fun register(): Boolean {
+    public fun register(plugin: KotlinPlugin): Boolean {
+        this.plugin = plugin
         val commandMap = reflectCommandMap()
         if (commandMap == null) {
             plugin.log.error { "Could not register the command /$name because of command map reflection failure." }
@@ -112,7 +107,14 @@ public abstract class KotlinCommand(
      * Unregisters the command.
      * @return If the unregistration was successful.
      */
+    override suspend fun unregisterComponent(plugin: KotlinPlugin): Boolean = unregister()
+
+    /**
+     * Unregisters the command.
+     * @return If the unregistration was successful.
+     */
     public fun unregister(): Boolean {
+        if (!::plugin.isInitialized || !isRegistered) return false
         val commandMap = reflectCommandMap()
         if (commandMap == null) {
             plugin.log.error { "Could not unregister the command /$name because of command map reflection failure." }

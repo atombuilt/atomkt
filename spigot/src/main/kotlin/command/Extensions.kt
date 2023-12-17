@@ -3,12 +3,16 @@ package com.atombuilt.atomkt.spigot.command
 import com.atombuilt.atomkt.spigot.KotlinPlugin
 import org.bukkit.command.CommandSender
 
-public inline fun KotlinPlugin.command(name: String, block: KotlinCommandBuilder.() -> Unit): KotlinCommand {
+public inline fun KotlinPlugin.attachCommand(
+    name: String,
+    block: KotlinCommandBuilder.() -> Unit
+): KotlinCommand = command(name, block).also { attachComponent(it) }
+
+public inline fun command(name: String, block: KotlinCommandBuilder.() -> Unit): KotlinCommand {
     val builder = KotlinCommandBuilder().apply(block)
     val executeBlock = builder.execute
     val tabCompleteBlock = builder.tabComplete
     return object : KotlinCommand(
-        plugin = this,
         name = name,
         description = builder.description,
         usageMessage = builder.usageMessage,

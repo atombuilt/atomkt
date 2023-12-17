@@ -7,17 +7,12 @@ import org.bukkit.event.Event
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
 
-public fun KotlinPlugin.registerListener(listener: KotlinListener) {
-    listener.register(this)
-}
-
-public inline fun <reified T : Event> KotlinPlugin.registerListener(
+public inline fun <reified T : Event> KotlinPlugin.attachListener(
     noinline block: T.() -> Unit
-): KotlinListener = listener(block).apply { registerListener(this) }
-
-public inline fun <reified T : Event> KotlinPlugin.linkListener(
-    noinline block: T.() -> Unit
-): KotlinListener = listener(block).apply { linkListener(this) }
+): KotlinListener = object : KotlinListener {
+    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = false)
+    fun eventHandler(event: T) = block(event)
+}.also { attachComponent(it) }
 
 public inline fun <reified T : Event> listener(
     noinline block: T.() -> Unit

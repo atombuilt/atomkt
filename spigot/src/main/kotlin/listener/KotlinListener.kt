@@ -3,6 +3,7 @@ package com.atombuilt.atomkt.spigot.listener
 import com.atombuilt.atomkt.commons.reflection.access
 import com.atombuilt.atomkt.commons.reflection.assure
 import com.atombuilt.atomkt.spigot.KotlinPlugin
+import com.atombuilt.atomkt.spigot.component.KotlinPluginComponent
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.launch
 import org.bukkit.event.Event
@@ -11,6 +12,8 @@ import org.bukkit.event.HandlerList
 import org.bukkit.event.Listener
 import org.bukkit.plugin.EventExecutor
 import org.bukkit.plugin.RegisteredListener
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.get
 import kotlin.reflect.KFunction
 import kotlin.reflect.full.*
 import kotlin.reflect.javaType
@@ -19,39 +22,41 @@ import kotlin.reflect.javaType
  * Abstraction over [Listener] with support for Kotlin features,
  * such as coroutines.
  */
-public interface KotlinListener : Listener
+public interface KotlinListener : Listener, KotlinPluginComponent {
 
-/**
- * Registers the listener to the [plugin].
- */
-public fun KotlinListener.register(plugin: KotlinPlugin) {
-    reflectEventHandlers(plugin).forEach { (eventClass, listeners) ->
-        val handlerList = eventClass.reflectHandlerList()
-        handlerList.registerAll(listeners)
+    /**
+     * Registers this listener to plugin from the koin context.
+     */
+    public fun KoinComponent.register() {
+        register(get())
     }
-}
 
-/**
- * Unregisters the listener.
- */
-public fun KotlinListener.unregister() {
-    HandlerList.unregisterAll(this)
-}
+    override suspend fun registerComponent(plugin: KotlinPlugin): Boolean {
+        register(plugin)
+        return true
+    }
 
-/**
- * Links the listener to the [plugin].
- * @see [KotlinPlugin.linkListener]
- */
-public fun KotlinListener.link(plugin: KotlinPlugin): Boolean {
-    return plugin.linkListener(this)
-}
+    /**
+     * Registers this listener to the [plugin].
+     */
+    public fun register(plugin: KotlinPlugin) {
+        reflectEventHandlers(plugin).forEach { (eventClass, listeners) ->
+            val handlerList = eventClass.reflectHandlerList()
+            handlerList.registerAll(listeners)
+        }
+    }
 
-/**
- * Unlinks the listener from the [plugin].
- * @see [KotlinPlugin.unlinkListener]
- */
-public fun KotlinListener.unlink(plugin: KotlinPlugin): Boolean {
-    return plugin.unlinkListener(this)
+    override suspend fun unregisterComponent(plugin: KotlinPlugin): Boolean {
+        unregister()
+        return true
+    }
+
+    /**
+     * Unregisters this listener.
+     */
+    public fun unregister() {
+        HandlerList.unregisterAll(this)
+    }
 }
 
 private class KotlinEventExecutor(

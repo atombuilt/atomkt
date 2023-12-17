@@ -2,18 +2,15 @@ package com.atombuilt.atomkt.spigot
 
 import com.atombuilt.atomkt.config.ConfigManager
 import com.atombuilt.atomkt.config.loadConfigManager
-import com.atombuilt.atomkt.spigot.command.KotlinCommand
+import com.atombuilt.atomkt.spigot.component.KotlinPluginComponent
 import com.atombuilt.atomkt.spigot.coroutines.PluginAsyncCoroutineDispatcher
 import com.atombuilt.atomkt.spigot.coroutines.PluginCoroutineDispatcher
 import com.atombuilt.atomkt.spigot.coroutines.ServerHeartbeatController
-import com.atombuilt.atomkt.spigot.listener.KotlinListener
-import com.atombuilt.atomkt.spigot.listener.registerListener
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.*
 import org.bukkit.command.Command
 import org.bukkit.command.CommandSender
-import org.bukkit.event.HandlerList
 import org.bukkit.plugin.Plugin
 import org.bukkit.plugin.java.JavaPlugin
 import org.koin.core.component.KoinComponent
@@ -36,8 +33,8 @@ public abstract class KotlinPlugin : JavaPlugin(), KoinComponent {
     private val serverHeartbeatController by lazy { ServerHeartbeatController(this) }
     private val coroutineDispatcher by lazy { PluginCoroutineDispatcher(serverHeartbeatController, this) }
     private val asyncCoroutineDispatcher by lazy { PluginAsyncCoroutineDispatcher(this) }
-    private val linkedCommands: MutableSet<KotlinCommand> = HashSet()
-    private val linkedListeners: MutableSet<KotlinListener> = HashSet()
+    private val components: MutableSet<KotlinPluginComponent> = mutableSetOf()
+    private var hasProcessedComponents: Boolean = false
 
     /**
      * The primary coroutine context of the plugin.
@@ -76,7 +73,7 @@ public abstract class KotlinPlugin : JavaPlugin(), KoinComponent {
      */
     public val log: KLogger = KotlinLogging.logger(name)
 
-    /**
+    /**~
      * Kotlin's variant of the plugin logger.
      */
     public val logger: KLogger get() = log
@@ -101,18 +98,14 @@ public abstract class KotlinPlugin : JavaPlugin(), KoinComponent {
         initCoroutines()
         serverHeartbeatController.runControlled {
             startKoin()
+            processComponents()
             onEnabled()
-            registerListeners()
-            registerCommands()
+            registerComponents()
         }
     }
 
-    private fun registerListeners() {
-        linkedListeners.forEach { registerListener(it) }
-    }
-
-    private fun registerCommands() {
-        linkedCommands.filter { !it.isRegistered }.forEach { it.register() }
+    private suspend fun registerComponents() {
+        components.forEach { it.registerComponent(this) }
     }
 
     private fun initCoroutines() {
@@ -154,6 +147,13 @@ public abstract class KotlinPlugin : JavaPlugin(), KoinComponent {
         declareConfigByPathOrClasspath(T::class, dataFolder.resolve(name).toPath(), "/config/$name")
     }
 
+    private suspend fun processComponents() {
+        if (hasProcessedComponents) return
+        hasProcessedComponents = true
+        attachComponents()
+        components.addAll(getKoin().getAll<KotlinPluginComponent>())
+    }
+
     /**
      * Called once the plugin is enabled.
      */
@@ -162,8 +162,7 @@ public abstract class KotlinPlugin : JavaPlugin(), KoinComponent {
     final override fun onDisable() {
         try {
             serverHeartbeatController.runControlled {
-                unregisterListeners()
-                unregisterCommands()
+                unregisterComponents()
                 onDisabled()
                 stopKoin()
             }
@@ -174,12 +173,8 @@ public abstract class KotlinPlugin : JavaPlugin(), KoinComponent {
         }
     }
 
-    private fun unregisterListeners() {
-        HandlerList.unregisterAll(this)
-    }
-
-    private fun unregisterCommands() {
-        linkedCommands.filter { it.isRegistered }.forEach { it.unregister() }
+    private suspend fun unregisterComponents() {
+        components.forEach { it.unregisterComponent(this) }
     }
 
     private fun stopKoin() {
@@ -194,50 +189,35 @@ public abstract class KotlinPlugin : JavaPlugin(), KoinComponent {
     protected abstract suspend fun onDisabled()
 
     /**
-     * Links the [listener] to the plugin.
-     * Linked listeners are registered once the plugin is enabled,
-     * and unregistered once it is disabled.
-     * If you link a listener after the plugin was enabled, it will be registered immediately.
+     * This method is called only once in the plugin's lifecycle before [onEnabled].
+     * It is used for attaching components to the plugin's lifecycle.
+     * @see KotlinPluginComponent
+     * @see attachComponent
+     * @see detachComponent
      */
-    public fun linkListener(listener: KotlinListener): Boolean {
-        if (!linkedListeners.add(listener)) return false
-        if (isEnabled) {
-            HandlerList.unregisterAll(listener)
-            registerListener(listener)
-        }
-        return true
+    protected open suspend fun attachComponents() {
+        // Has empty default implementation to be overridden.
     }
 
     /**
-     * Unlinks the [listener] from the plugin.
-     * Unregisters the listener if registered.
+     * Attach [component] to this plugin's lifecycle.
+     * @param component The component to attach.
+     * @see KotlinPluginComponent
+     * @see detachComponent
      */
-    public fun unlinkListener(listener: KotlinListener): Boolean {
-        if (!linkedListeners.remove(listener)) return false
-        HandlerList.unregisterAll(listener)
-        return true
+    public fun attachComponent(component: KotlinPluginComponent) {
+        components.add(component)
     }
 
     /**
-     * Links the [command] to the plugin.
-     * Linked commands are registered once the plugin is enabled,
-     * and unregistered once it is disabled.
-     * If you link a command after the plugin was enabled, it will be registered immediately.
+     * Detach [component] from this plugin's lifecycle.
+     *
+     * @param component The component to detach.
+     * @see KotlinPluginComponent
+     * @see attachComponent
      */
-    public fun linkCommand(command: KotlinCommand): Boolean {
-        if (!linkedCommands.add(command)) return false
-        if (isEnabled && !command.isRegistered) command.register()
-        return true
-    }
-
-    /**
-     * Unlinks the [command] from the plugin.
-     * Unregisters the command if registered.
-     */
-    public fun unlinkCommand(command: KotlinCommand): Boolean {
-        if (!linkedCommands.remove(command)) return false
-        if (command.isRegistered) command.unregister()
-        return true
+    public fun detachComponent(component: KotlinPluginComponent) {
+        components.remove(component)
     }
 
     final override fun onCommand(

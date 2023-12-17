@@ -3,16 +3,16 @@ package com.atombuilt.atomkt.spigot.example
 import com.atombuilt.atomkt.config.ConfigManager
 import com.atombuilt.atomkt.config.declareConfigByClasspath
 import com.atombuilt.atomkt.spigot.KotlinPlugin
-import com.atombuilt.atomkt.spigot.command.command
+import com.atombuilt.atomkt.spigot.command.attachCommand
 import com.atombuilt.atomkt.spigot.example.ExampleConfig.Companion.exampleConfig
-import com.atombuilt.atomkt.spigot.listener.linkListener
+import com.atombuilt.atomkt.spigot.listener.attachListener
 import org.bukkit.event.player.PlayerJoinEvent
 
 class ExamplePlugin : KotlinPlugin() {
 
-    override suspend fun onEnabled() {
-        linkListener<PlayerJoinEvent> { player.sendMessage(exampleConfig.welcomeMessage) }
-        command("example") {
+    override suspend fun attachComponents() {
+        attachListener<PlayerJoinEvent> { player.sendMessage(exampleConfig.welcomeMessage) }
+        attachCommand("example") {
             description = "An example command."
 
             execute { sender, args ->
@@ -27,7 +27,10 @@ class ExamplePlugin : KotlinPlugin() {
                     else -> emptyList()
                 }
             }
-        }.link()
+        }
+    }
+
+    override suspend fun onEnabled() {
         log.info { "Example plugin has been enabled!" }
     }
 
