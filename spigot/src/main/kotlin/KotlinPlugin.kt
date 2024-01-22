@@ -141,6 +141,14 @@ public abstract class KotlinPlugin : JavaPlugin(), KoinComponent {
         loadConfigManager(configManager = configManager) { configuration() }
     }
 
+    /**
+     * Create config manager for this plugin.
+     * This method can be overridden to provide a custom [ConfigManager].
+     * Called once the plugin is enabled.
+     * @param koinApplication The koin application of this plugin.
+     * @param classLoader The class loader of this plugin.
+     * @return The config manager of this plugin.
+     */
     protected open fun createConfigManager(koinApplication: KoinApplication, classLoader: ClassLoader): ConfigManager {
         return ConfigManager.default(koinApplication.koin, classLoader)
     }
