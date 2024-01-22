@@ -13,6 +13,7 @@ import org.bukkit.command.Command
 import org.bukkit.command.CommandSender
 import org.bukkit.plugin.Plugin
 import org.bukkit.plugin.java.JavaPlugin
+import org.koin.core.KoinApplication
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
 import org.koin.core.context.GlobalContext
@@ -126,13 +127,18 @@ public abstract class KotlinPlugin : JavaPlugin(), KoinComponent {
         val koinApplication = GlobalContext.getKoinApplicationOrNull()
         if (koinApplication == null) {
             GlobalContext.startKoin {
-                loadConfigManager(classLoader = this::class.java.classLoader) { configuration() }
+                loadPluginConfigManager()
                 modules(internalModule, module)
             }
         } else {
-            koinApplication.loadConfigManager { configuration() }
+            koinApplication.loadPluginConfigManager()
             koinApplication.koin.loadModules(listOf(internalModule, module))
         }
+    }
+
+    private fun KoinApplication.loadPluginConfigManager() {
+        val configManager = getKoin().getOrNull<ConfigManager>() ?: ConfigManager.default(koin, classLoader)
+        loadConfigManager(configManager = configManager) { configuration() }
     }
 
     /**
