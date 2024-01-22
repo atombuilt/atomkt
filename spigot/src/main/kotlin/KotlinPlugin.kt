@@ -137,8 +137,12 @@ public abstract class KotlinPlugin : JavaPlugin(), KoinComponent {
     }
 
     private fun KoinApplication.loadPluginConfigManager() {
-        val configManager = getKoin().getOrNull<ConfigManager>() ?: ConfigManager.default(koin, classLoader)
+        val configManager = createConfigManager(koinApplication = this, classLoader = classLoader)
         loadConfigManager(configManager = configManager) { configuration() }
+    }
+
+    protected open fun createConfigManager(koinApplication: KoinApplication, classLoader: ClassLoader): ConfigManager {
+        return ConfigManager.default(koinApplication.koin, classLoader)
     }
 
     /**
