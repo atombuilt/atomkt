@@ -20,7 +20,7 @@ publishing {
             version = gitModuleVersion
 
             pom {
-                name.set(project.name)
+                name.set(project.path.removePrefix(":").replace(":", "-"))
                 description.set("AtomBuilt libraries")
                 url.set("https://github.com/atombuilt/atomkt")
 
