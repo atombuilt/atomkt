@@ -1,3 +1,5 @@
+@file:Suppress("INVISIBLE_MEMBER", "INVISIBLE_REFERENCE")
+
 package com.atombuilt.atomkt.spigot
 
 import com.atombuilt.atomkt.config.ConfigManager
@@ -7,7 +9,7 @@ import com.atombuilt.atomkt.spigot.coroutines.PluginAsyncCoroutineDispatcher
 import com.atombuilt.atomkt.spigot.coroutines.PluginCoroutineDispatcher
 import com.atombuilt.atomkt.spigot.coroutines.ServerHeartbeatController
 import io.github.oshai.kotlinlogging.KLogger
-import io.github.oshai.kotlinlogging.KotlinLogging
+import io.github.oshai.kotlinlogging.jul.internal.JulLoggerFactory
 import kotlinx.coroutines.*
 import org.bukkit.command.Command
 import org.bukkit.command.CommandSender
@@ -72,7 +74,7 @@ public abstract class KotlinPlugin : JavaPlugin(), KoinComponent {
     /**
      * Kotlin's variant of the plugin logger.
      */
-    public val log: KLogger = KotlinLogging.logger(name)
+    public val log: KLogger = JulLoggerFactory.wrapJLogger(getLogger())
 
     /**~
      * Kotlin's variant of the plugin logger.
