@@ -110,7 +110,7 @@ internal class HopliteConfigManager(
         if (to !is ConfigSource.PathSource || to.path.exists()) return
         from.open(false).getOrElse { null }?.use { inputStream ->
             to.path.createParentDirectories()
-            to.path.writeBytes(inputStream.readAllBytes())
+            to.path.writeBytes(inputStream.readBytes())
         }
     }
 

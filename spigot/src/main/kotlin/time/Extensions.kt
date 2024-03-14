@@ -22,4 +22,4 @@ public val Duration.inWholeTicks: Long get() = inWholeSeconds * 20
 /**
  * The value of this [java.time.Duration] expressed as a [Long] number of ticks.
  */
-public fun JavaDuration.toTicks(): Long = toSeconds() * 20
+public fun JavaDuration.toTicks(): Long = seconds * 20

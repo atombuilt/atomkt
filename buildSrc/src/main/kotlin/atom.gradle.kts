@@ -27,13 +27,13 @@ kotlin {
 tasks {
     withType<KotlinCompile> {
         compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_11)
+            jvmTarget.set(JvmTarget.JVM_1_8)
         }
     }
 
     withType<JavaCompile> {
         options.encoding = Charsets.UTF_8.name()
-        targetCompatibility = "11"
+        targetCompatibility = "8"
     }
 
     processResources {
@@ -44,7 +44,7 @@ tasks {
         moduleName.set(project.name)
         failOnWarning.set(true)
         dokkaSourceSets.configureEach {
-            jdkVersion.set(11)
+            jdkVersion.set(8)
             suppressGeneratedFiles.set(false)
             sourceLink {
                 localDirectory.set(project.projectDir)
