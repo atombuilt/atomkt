@@ -16,6 +16,8 @@ repositories {
     maven("https://papermc.io/repo/repository/maven-public/")
     // Repository for SpigotMC (https://spigotmc.org) artifacts.
     maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots")
+    // Repository for maven snapshots.
+    maven("https://s01.oss.sonatype.org/content/repositories/snapshots")
 }
 
 kotlin {
