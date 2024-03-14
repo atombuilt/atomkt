@@ -1,12 +1,13 @@
 package com.atombuilt.atomkt.spigot.component
 
 import com.atombuilt.atomkt.spigot.KotlinPlugin
+import org.koin.core.component.KoinComponent
 
 /**
  * Represents a [KotlinPlugin] component.
  * @see KotlinPlugin
  */
-public interface KotlinPluginComponent {
+public interface KotlinPluginComponent : KoinComponent {
 
     /**
      * Registers this component to the [plugin].
