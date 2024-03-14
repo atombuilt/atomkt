@@ -10,6 +10,8 @@ import org.bukkit.command.Command
 import org.bukkit.command.CommandMap
 import org.bukkit.command.CommandSender
 import org.bukkit.command.SimpleCommandMap
+import org.bukkit.entity.Player
+import kotlin.reflect.full.declaredFunctions
 
 /**
  * Abstraction over the [Command] with support for Kotlin features,
@@ -47,13 +49,6 @@ public abstract class KotlinCommand(
         sender: CommandSender,
         alias: String,
         args: Array<String>
-    ): MutableList<String> = tabCompleteAdapter(sender, alias, args)
-
-    final override fun tabComplete(
-        sender: CommandSender,
-        alias: String,
-        args: Array<String>,
-        location: Location?
     ): MutableList<String> = tabCompleteAdapter(sender, alias, args)
 
     private fun tabCompleteAdapter(
@@ -141,6 +136,8 @@ public abstract class KotlinCommand(
     }.getOrNull()
 
     private fun updateCommandForPlayers() {
+        val doesSupport = Player::class.declaredFunctions.any { it.name == "updateCommands" }
+        if (!doesSupport) return
         plugin.server.onlinePlayers.forEach { it.updateCommands() }
     }
 
