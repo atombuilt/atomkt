@@ -109,7 +109,7 @@ internal class HopliteConfigManager(
     private fun writeDefaultsIfNotExists(to: ConfigSource, from: ConfigSource) {
         if (to !is ConfigSource.PathSource || to.path.exists()) return
         from.open(false).getOrElse { null }?.use { inputStream ->
-            to.path.toFile().mkdirs()
+            to.path.toFile().parentFile.mkdirs()
             to.path.writeBytes(inputStream.readBytes())
         }
     }
